@@ -7,7 +7,8 @@
   "author": "p-hebert <philippe.hebert.qc@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "compile": "babel -d lib/ src/"
+    "compile": "babel -d lib/ src/",
+    "test": "./node_modules/.bin/istanbul cover ./node_modules/tape/bin/tape ./test/*.js"
   },
   "devDependencies": {
     "babel-cli": "^6.24.1",
