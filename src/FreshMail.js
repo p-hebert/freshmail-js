@@ -33,21 +33,35 @@ class FreshMail {
       key: api_key,
       secret: api_secret
     };
-    this.host = HOST;
-    this.prefix = PREFIX;
-    this.contentType = CONTENT_TYPE;
+    this.http = {
+      host: HOST,
+      prefix: PREFIX,
+      contentType: CONTENT_TYPE
+    };
+  }
+
+  get contentType() {
+    return this.http.contentType;
+  }
+
+  get host() {
+    return this.http.host;
+  }
+
+  get prefix() {
+    return this.http.prefix;
   }
 
   set contentType(contentType) {
-    this.contentType = contentType;
+    this.http.contentType = contentType;
   }
 
   set host(host) {
-    this.host = host;
+    this.http.host = host;
   }
 
   set prefix(prefix) {
-    this.prefix = prefix;
+    this.http.prefix = prefix;
   }
 
   /**
@@ -56,14 +70,16 @@ class FreshMail {
    * @param {object} payload: POST data serializable JSON object
   **/
   request(url, payload, method = 'POST') {
-    let req_data = payload ? JSON.stringify(payload) : '';
-    let full_url = `${this.host}${this.prefix}${url}`;
+    let json_data = payload ? JSON.stringify(payload) : '';
+    let full_url = `${this.http.host}${this.http.prefix}${url}`;
+    let signature = `${this.api.key}/${this.http.prefix}${url}${json_data}${this.api.secret}`;
+    console.log(signature);
     let hash = crypto
                  .createHash('sha1')
-                 .update(`${this.api.key}/${this.prefix}${url}${req_data}${this.api.secret}`)
+                 .update(signature)
                  .digest('hex');
     let headers = {
-      'Content-Type': this.contentType,
+      'Content-Type': this.http.contentType,
       'X-Rest-ApiKey': this.api.key,
       'X-Rest-ApiSign': hash
     };
