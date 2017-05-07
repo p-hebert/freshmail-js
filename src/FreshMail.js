@@ -76,17 +76,16 @@ class FreshMail {
                   .send(payload);
     }else if(method === 'GET'){
       request = superagent
-                  .post(full_url)
+                  .get(full_url)
                   .set(headers)
-                  .send(req_data);
-      request = superagent.post(full_url);
+                  .query(payload);
     }else{
       return Promise.reject(FreshMailError(`FreshMail API only supports GET or POST methods; Got ${method}`));
     }
 
     return request
       .then((res) => {
-        if(res.status !== 200 && res.body.errors){
+        if(res.status !== 200 || res.body.errors){
           let err = new FreshMailError('FreshMail API returned errors. See payload for more details');
           err.payload = res.body.errors;
           return Promise.reject(err);
@@ -94,6 +93,10 @@ class FreshMail {
           return Promise.resolve(res.body);
         }
       });
+  }
+
+  ping(method = 'GET') {
+    return this.request('ping', method === 'POST' ? {ping: true} : undefined, method);
   }
 
   mail(email, subject, body, isHTML = false) {
@@ -113,10 +116,10 @@ class FreshMail {
     return this.mail(email, subject, body, true);
   }
 
-  addSubscriber(email, list_hash, state = 3, confirm = 1, custom_fields) {
+  addSubscriber(email, list_hash, state = 3, confirm = 0, custom_fields) {
     let payload = { email, list: list_hash, state, confirm };
 
-    if(custom_fields && typeof custom_fields === 'object'){
+    if(custom_fields && typeof custom_fields === 'object' && Object.keys(custom_fields).length){
       payload.custom_fields = custom_fields;
     }else if(custom_fields){
       return Promise.reject(
@@ -131,15 +134,13 @@ class FreshMail {
     return this.request('subscriber/delete', { email, list: list_hash });
   }
 
+  // TODO: Create subscriber list
+
+  // TODO: Delete subscriber list
+
   getLists() {
     return this.request('subscribers_list/lists')
-      .then((res) => {
-        if(res.status === 200){
-          return Promise.resolve(res.body.lists);
-        }else{
-          return Promise.reject(res);
-        }
-      });
+      .then((res) => Promise.resolve(res.body.lists));
   }
 
   getSubscriber(email, list_hash) {
